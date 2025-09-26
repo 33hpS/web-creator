@@ -1,3 +1,7 @@
 # Cloudflare Pages configuration for Web Creator
-# Ensures Pages recognizes the correct build output directory.
+# Required by Pages config validation:
+# - name: your Pages project name
+# - pages_build_output_dir: directory where the static build is output
+
+name = "web-creator"
 pages_build_output_dir = "dist"
