@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Print styles */
+@page {
+  margin: 12mm;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+}
+
+/* Tablet optimizations */
+@media (pointer: coarse) {
+  button, [role="button"], .btn {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+  
+  input, textarea, select {
+    font-size: 16px;
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+}
