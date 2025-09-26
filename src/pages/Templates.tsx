@@ -14,6 +14,7 @@ import { LabelTemplate } from '../types/entities';
 import LabelDesigner, { LabelDesignerRef } from '../components/label-designer/LabelDesigner';
 import { Plus, Save, FileText, Loader2, Copy, Trash2, RotateCw } from 'lucide-react';
 import { PrintOnly } from '../components/print/Visibility';
+import InteractionGuard from '../components/system/InteractionGuard';
 
 const TemplatesPage: React.FC = () => {
   const ref = useRef<LabelDesignerRef>(null);
@@ -179,7 +180,7 @@ const TemplatesPage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div className="space-y-1">
                     <Label htmlFor="tplName">Название шаблона</Label>
-                    <Input id="tplName" value={name} onChange={(e) => setName(e.target.value)} />
+                    <Input id="tplName" autoFocus value={name} onChange={(e) => setName(e.target.value)} />
                   </div>
                   <div className="space-y-1">
                     <Label>Текущий ID</Label>

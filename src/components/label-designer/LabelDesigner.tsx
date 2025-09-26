@@ -3,7 +3,7 @@
  * Использует react-resizable-panels (PanelGroup, Panel, PanelResizeHandle)
  */
 
-import React, { forwardRef, useImperativeHandle } from 'react';
+import React, { forwardRef, useImperativeHandle, useEffect, useState } from 'react';
 import { useDesignerStore } from './store';
 import Palette from './Palette';
 import Canvas from './Canvas';
@@ -38,13 +38,26 @@ const LabelDesigner = forwardRef<LabelDesignerRef, {}>((_props, ref) => {
     clear,
   }));
 
+  /** Mount shield to prevent ghost-click from opening print preview immediately after navigation */
+  const [mountShield, setMountShield] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setMountShield(false), 600);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <Card className="h-[calc(100vh-200px)]">
       <CardHeader className="py-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Конструктор этикетки</CardTitle>
           <PrintPreview>
-            <Button variant="outline" className="bg-white">
+            <Button
+              variant="outline"
+              className={`bg-white ${mountShield ? 'pointer-events-none opacity-60' : ''}`}
+              disabled={mountShield}
+              tabIndex={mountShield ? -1 : 0}
+              aria-disabled={mountShield}
+            >
               <Printer className="h-4 w-4 mr-2" />
               Предпросмотр печати
             </Button>

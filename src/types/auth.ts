@@ -1,4 +1,3 @@
-
 /**
  * Типы для системы аутентификации и управления доступом
  */
@@ -22,4 +21,13 @@ export interface AuthState {
 export interface LoginCredentials {
   username: string;
   password: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  isAuthenticated: boolean;
+  login: (userData: User) => void;
+  logout: () => void;
+  hasPermission: (requiredRole?: string) => boolean;
+  loading: boolean;
 }

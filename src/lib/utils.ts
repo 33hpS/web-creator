@@ -1,7 +1,6 @@
 /**
- * Утилиты для работы с классами
+ * Утилиты для работы с классами Tailwind CSS
  */
-
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 

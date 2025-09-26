@@ -215,32 +215,86 @@ function Sidebar() {
   );
 }
 
-/** Quick entrance tiles (screen only) */
+/** Quick entrance tiles (screen only)
+ * Renders module tiles with Russian descriptions and explicit "Перейти" button.
+ * The whole tile is keyboard and mouse clickable for better UX and a11y.
+ * Safe navigation avoids ghost-activation (Enter/Space carry-over).
+ */
 function QuickEntrances() {
   const navigate = useNavigate();
+
+  /** Human-readable Russian descriptions per route */
+  const descriptions: Record<string, string> = {
+    '/dashboard': 'Общий обзор',
+    '/production': 'Управление производством',
+    '/final-marking': 'Финальная маркировка',
+    '/templates': 'Настройка маркировки',
+    '/reports': 'Отчеты и аналитика',
+    '/models': 'Каталог продукции',
+    '/users': 'Управление доступом',
+    '/settings': 'Настройки системы',
+  };
+
+  /** Safe navigate: blur current focus and navigate after current event loop tick. */
+  const safeNavigate = (path: string) => {
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    // Delay ensures mouseup/click are fully processed before navigation happens,
+    // preventing click-through on the destination page.
+    setTimeout(() => navigate(path), 0);
+  };
+
+  /** Keyboard activation on Enter/Space using keyup to prevent carry-over */
+  const onTileKeyUp = (e: React.KeyboardEvent<HTMLDivElement>, path: string) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      e.stopPropagation();
+      safeNavigate(path);
+    }
+  };
+
   return (
     <section className="no-print px-6 pt-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-8">
         {NAV_ITEMS.map(({ title, path, icon: Icon }) => (
-          <button
+          <div
             key={path}
-            onClick={() => navigate(path)}
+            role="button"
+            tabIndex={0}
+            onClick={() => safeNavigate(path)}
+            onKeyUp={(e) => onTileKeyUp(e, path)}
             className={cx(
-              'group border rounded-lg p-4 text-left bg-white hover:bg-blue-50 transition',
+              'group border rounded-lg p-4 bg-white hover:shadow-md transition cursor-pointer',
               'focus:outline-none focus:ring-2 focus:ring-blue-400'
             )}
+            aria-label={`Перейти: ${title}`}
           >
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center">
+            <div className="flex items-start gap-3">
+              <div className="h-9 w-9 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
                 <Icon className="h-5 w-5" />
               </div>
-              <div>
+              <div className="flex-1">
                 <div className="font-semibold text-gray-900">{title}</div>
-                <div className="text-sm text-gray-600">Open {title.toLowerCase()}</div>
+                <div className="text-sm text-gray-600">
+                  {descriptions[path] || `Открыть ${title.toLowerCase()}`}
+                </div>
               </div>
-              <ArrowRight className="ml-auto h-4 w-4 text-gray-400 group-hover:text-blue-600" />
+              <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 mt-1" />
             </div>
-          </button>
+
+            <div className="mt-4 flex items-center justify-end">
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  safeNavigate(path);
+                }}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Перейти
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         ))}
       </div>
     </section>

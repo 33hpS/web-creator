@@ -1,210 +1,145 @@
-
 /**
- * Контекст аутентификации для управления состоянием пользователя
+ * AuthContext.tsx
+ * Purpose: Provide unified authentication state across the app with compatibility to existing pages.
+ * Exposes:
+ *  - authState: { user, isAuthenticated, isLoading }
+ *  - user, isAuthenticated, loading
+ *  - login, logout
+ *  - hasPermission(requiredRole?)
+ *
+ * Notes:
+ *  - Accepts flexible login payloads (can include `name` or `fullName`). Normalizes to `fullName`.
+ *  - Persists user in localStorage to keep session.
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthState, LoginCredentials, UserRole } from '../types/auth';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
 
-interface AuthContextType {
-  authState: AuthState;
-  login: (credentials: LoginCredentials) => Promise<boolean>;
-  logout: () => void;
-  hasPermission: (requiredRole: UserRole) => boolean;
+/** User shape used by the app (flexible to support existing pages) */
+export interface AuthUser {
+  id: string
+  username: string
+  role: 'admin' | 'manager' | 'worker' | (string & {})
+  /** Optional readable name fields */
+  fullName?: string
+  name?: string
+  email?: string
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+/** Internal persisted storage key */
+const STORAGE_KEY = 'supim_auth_user'
 
-// Mock данные для демонстрации
-const mockUsers: Array<User & { password: string }> = [
-  {
-    id: '1',
-    username: 'admin',
-    password: 'admin123',
-    role: 'admin',
-    fullName: 'Администратор Системы',
-    email: 'admin@supim.ru'
-  },
-  {
-    id: '2',
-    username: 'manager',
-    password: 'manager123',
-    role: 'manager',
-    fullName: 'Менеджер Производства',
-    email: 'manager@supim.ru'
-  },
-  {
-    id: '3',
-    username: 'worker',
-    password: 'worker123',
-    role: 'worker',
-    fullName: 'Оператор Линии',
-    email: 'worker@supim.ru'
+/** Context value interface, compatible with existing pages */
+interface AppAuthContext {
+  /** Structured state for legacy usage */
+  authState: {
+    user: AuthUser | null
+    isAuthenticated: boolean
+    isLoading: boolean
   }
-];
+  /** Direct shortcuts */
+  user: AuthUser | null
+  isAuthenticated: boolean
+  loading: boolean
 
-interface AuthProviderProps {
-  children: ReactNode;
+  /** Actions */
+  login: (u: Partial<AuthUser> & { id: string; username: string; role: AuthUser['role'] }) => void
+  logout: () => void
+  hasPermission: (requiredRole?: string) => boolean
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true // Загрузка при инициализации для проверки токена
-  });
+/** React context */
+const AuthContext = createContext<AppAuthContext | undefined>(undefined)
 
-  // Проверка аутентификации при загрузке
-  useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('authToken');
-      const userData = localStorage.getItem('user');
-      
-      if (token && userData) {
-        try {
-          // В реальном приложении здесь была бы проверка токена на сервере
-          // Для демо просто проверяем наличие токена
-          const isValid = await validateToken(token);
-          
-          if (isValid) {
-            setAuthState({
-              user: JSON.parse(userData),
-              isAuthenticated: true,
-              isLoading: false
-            });
-          } else {
-            // Токен невалиден, очищаем хранилище
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('user');
-            setAuthState({
-              user: null,
-              isAuthenticated: false,
-              isLoading: false
-            });
-          }
-        } catch (error) {
-          console.error('Token validation error:', error);
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('user');
-          setAuthState({
-            user: null,
-            isAuthenticated: false,
-            isLoading: false
-          });
-        }
-      } else {
-        setAuthState({
-          user: null,
-          isAuthenticated: false,
-          isLoading: false
-        });
-      }
-    };
-    
-    checkAuth();
-  }, []);
-
-  // Функция валидации токена (эмуляция)
-  const validateToken = async (token: string): Promise<boolean> => {
-    // Эмуляция проверки токена
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
-    // В реальном приложении здесь был бы вызов к серверу
-    // Для демо считаем токен валидным если он существует
-    return token.startsWith('mock_jwt_') || token.length > 10;
-  };
-
-  const login = async (credentials: LoginCredentials): Promise<boolean> => {
-    setAuthState(prev => ({ ...prev, isLoading: true }));
-    
+/**
+ * AuthProvider
+ * Wrap around the app to expose the auth state and actions.
+ */
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Initialize from localStorage
+  const [user, setUser] = useState<AuthUser | null>(() => {
     try {
-      // Эмуляция реального API вызова с JWT
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
-      });
-      
-      if (response.ok) {
-        const { user, token } = await response.json();
-        
-        // Сохранение токена в localStorage
-        localStorage.setItem('authToken', token);
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        setAuthState({
-          user,
-          isAuthenticated: true,
-          isLoading: false
-        });
-        return true;
-      } else {
-        throw new Error('Ошибка аутентификации');
-      }
-    } catch (error) {
-      // Fallback на mock данные при отсутствии бэкенда
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const user = mockUsers.find(
-        u => u.username === credentials.username && 
-        u.password === credentials.password
-      );
-      
-      if (user) {
-        const { password, ...userWithoutPassword } = user;
-        const mockToken = `mock_jwt_${Date.now()}`;
-        
-        localStorage.setItem('authToken', mockToken);
-        localStorage.setItem('user', JSON.stringify(userWithoutPassword));
-        
-        setAuthState({
-          user: userWithoutPassword,
-          isAuthenticated: true,
-          isLoading: false
-        });
-        return true;
-      }
-      
-      setAuthState(prev => ({ ...prev, isLoading: false }));
-      return false;
+      const raw = localStorage.getItem(STORAGE_KEY)
+      return raw ? (JSON.parse(raw) as AuthUser) : null
+    } catch {
+      return null
     }
-  };
+  })
 
-  const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    setAuthState({
-      user: null,
-      isAuthenticated: false,
-      isLoading: false
-    });
-  };
+  // Simulate quick boot without async loading
+  const [loading] = useState(false)
 
-  const hasPermission = (requiredRole: UserRole): boolean => {
-    if (!authState.user) return false;
-    
-    const roleHierarchy: Record<UserRole, number> = {
-      admin: 3,
-      manager: 2,
-      worker: 1
-    };
-    
-    return roleHierarchy[authState.user.role] >= roleHierarchy[requiredRole];
-  };
+  /** Persist user to localStorage */
+  useEffect(() => {
+    try {
+      if (user) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(user))
+      } else {
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [user])
 
-  return (
-    <AuthContext.Provider value={{ authState, login, logout, hasPermission }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+  /**
+   * login
+   * Normalizes various payload shapes to a consistent user state.
+   */
+  const login: AppAuthContext['login'] = (u) => {
+    const normalized: AuthUser = {
+      id: u.id,
+      username: u.username,
+      role: u.role,
+      fullName: u.fullName || u.name || u.username,
+      email: u.email,
+      name: u.name, // keep pass-through for compatibility if someone reads it
+    }
+    setUser(normalized)
   }
-  return context;
-};
+
+  /** logout: clear user */
+  const logout = () => setUser(null)
+
+  /**
+   * hasPermission
+   * Admin has access to everything.
+   * If requiredRole not provided — allow.
+   */
+  const hasPermission: AppAuthContext['hasPermission'] = (requiredRole) => {
+    if (!requiredRole) return true
+    if (!user) return false
+    if (user.role === 'admin') return true
+    return user.role === (requiredRole as any)
+  }
+
+  const value = useMemo<AppAuthContext>(
+    () => ({
+      authState: {
+        user,
+        isAuthenticated: !!user,
+        isLoading: loading,
+      },
+      user,
+      isAuthenticated: !!user,
+      loading,
+      login,
+      logout,
+      hasPermission,
+    }),
+    [user, loading],
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+/**
+ * useAuth
+ * Hook to access auth state and actions.
+ */
+export function useAuth(): AppAuthContext {
+  const ctx = useContext(AuthContext)
+  if (!ctx) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return ctx
+}
