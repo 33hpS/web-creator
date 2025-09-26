@@ -1,0 +1,124 @@
+/**
+ * Print styles
+ * Purpose: Provide a clean print layout by hiding navigation, footers and sidebars.
+ * Keep only the primary content (text, tables, essential images).
+ *
+ * Usage:
+ * - Add class "no-print" to elements you want to hide in print.
+ * - Add class "only-print" to elements visible only in print.
+ * - Wrap printable content with "print-area print-clean" for best results.
+ * - Optional helpers: "avoid-break", "page-break-before", "page-break-after".
+ * - For thermal printers or monochrome targets: add "grayscale-on-print" to a container.
+ */
+
+/* Default: elements marked as print-only are hidden on screen */
+.only-print { display: none !important; }
+
+/* Page margins for printed document */
+@page {
+  margin: 12mm;
+}
+
+@media print {
+  /* Global resets for print */
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: economy; /* prefer ink saving */
+    print-color-adjust: economy;
+    image-rendering: crisp-edges;
+  }
+
+  /* Hide typical chrome in print */
+  .no-print,
+  .app-nav,
+  .app-sidebar,
+  .app-footer {
+    display: none !important;
+  }
+
+  /* Show print-only blocks */
+  .only-print {
+    display: block !important;
+  }
+
+  /* Clean look for the printable area and its descendants */
+  .print-clean,
+  .print-clean * {
+    background: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    color: #000 !important;
+  }
+
+  /* Main printable container: occupy full width, no extra paddings */
+  .print-area {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: auto !important;
+    max-width: none !important;
+    border: 0 !important;
+  }
+
+  /* Typography for readability */
+  .print-area h1,
+  .print-area h2,
+  .print-area h3 {
+    margin: 0 0 8px 0 !important;
+    line-height: 1.2 !important;
+  }
+  .print-area p {
+    margin: 0 0 8px 0 !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Links: remove decoration, keep readable */
+  .print-area a {
+    color: #000 !important;
+    text-decoration: none !important;
+  }
+
+  /* Images: fit page width and avoid breaking */
+  .print-area img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Grayscale helper for images, charts, svg when needed */
+  .grayscale-on-print img,
+  .grayscale-on-print svg,
+  .grayscale-on-print canvas {
+    filter: grayscale(100%) contrast(110%) !important;
+  }
+
+  /* Tables: clear borders and readable cells */
+  .print-area table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    page-break-inside: auto !important;
+  }
+  .print-area th,
+  .print-area td {
+    border: 1px solid #000 !important;
+    padding: 6px !important;
+    vertical-align: top !important;
+  }
+  .print-area thead { display: table-header-group; }
+  .print-area tfoot { display: table-footer-group; }
+
+  /* Remove UI chrome gaps around cards/sections */
+  .print-area .card,
+  .print-area .section {
+    padding: 0 !important;
+    border: 0 !important;
+    margin: 0 0 10px 0 !important;
+  }
+
+  /* Break helpers */
+  .avoid-break { page-break-inside: avoid !important; break-inside: avoid !important; }
+  .page-break-before { page-break-before: always !important; break-before: page !important; }
+  .page-break-after { page-break-after: always !important; break-after: page !important; }
+}

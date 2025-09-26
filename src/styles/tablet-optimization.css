@@ -1,0 +1,93 @@
+/**
+ * Стили для оптимизации интерфейса под планшеты
+ * Улучшение touch-интерфейса и читаемости
+ */
+
+/* Базовые оптимизации для touch устройств */
+@media (pointer: coarse) {
+  /* Увеличение области клика для touch устройств */
+  button, 
+  [role="button"],
+  .btn {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Улучшение взаимодействия с формами */
+  input, 
+  textarea, 
+  select {
+    font-size: 16px; /* Предотвращает zoom в iOS */
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+  
+  /* Увеличение hit area для чекбоксов и радиокнопок */
+  input[type="checkbox"],
+  input[type="radio"] {
+    transform: scale(1.2);
+    margin: 8px;
+  }
+}
+
+/* Адаптивные улучшения для средних экранов */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Увеличение шрифтов для лучшей читаемости */
+  body {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  
+  /* Увеличение отступов для touch */
+  .container {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  /* Адаптация карточек */
+  .card {
+    margin-bottom: 16px;
+    border-radius: 12px;
+  }
+  
+  /* Увеличение иконок */
+  .icon-lg {
+    width: 24px;
+    height: 24px;
+  }
+  
+  /* Улучшение навигации */
+  nav a {
+    padding: 12px 16px;
+    margin: 4px;
+  }
+}
+
+/* Оптимизация для landscape ориентации */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  .grid-cols-1 {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+
+/* Улучшение скролла для touch устройств */
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Предотвращение выделения текста при двойном тапе */
+.no-text-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Анимации, оптимизированные для производительности */
+.tablet-friendly-animation {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
