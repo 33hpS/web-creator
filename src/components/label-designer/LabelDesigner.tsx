@@ -41,7 +41,7 @@ const LabelDesigner = forwardRef<LabelDesignerRef, {}>((_props, ref) => {
   /** Mount shield to prevent ghost-click from opening print preview immediately after navigation */
   const [mountShield, setMountShield] = useState(true);
   useEffect(() => {
-    const t = setTimeout(() => setMountShield(false), 600);
+    const t = setTimeout(() => setMountShield(false), 2000); // Увеличиваем до 2 секунд
     return () => clearTimeout(t);
   }, []);
 

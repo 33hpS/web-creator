@@ -45,15 +45,36 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ children }) => {
   const [zoom, setZoom] = React.useState(1);
   const [showGuidelines, setShowGuidelines] = React.useState(true);
 
-  // Управление диалогом
+  // Управление диалогом - НЕ открывать автоматически!
   const [open, setOpen] = React.useState(false);
 
-  // Армирование (разрешаем открытие только по "чистому" клику спустя 500 мс)
+  // Более строгое армирование - требуем ТОЛЬКО явных кликов по кнопке
   const [armed, setArmed] = React.useState(false);
+  const [hasInteracted, setHasInteracted] = React.useState(false);
+  const [mountTime] = React.useState(Date.now());
+  
   React.useEffect(() => {
-    const t = window.setTimeout(() => setArmed(true), 900);
+    // Увеличиваем время армирования до 3 секунд для надежности
+    const t = window.setTimeout(() => setArmed(true), 3000);
     return () => window.clearTimeout(t);
   }, []);
+  
+  // Дополнительная защита: требуем явного взаимодействия пользователя НА ЭТОЙ СТРАНИЦЕ
+  React.useEffect(() => {
+    const handleUserInteraction = (e: Event) => {
+      // Проверяем что прошло достаточно времени с загрузки страницы
+      if (Date.now() - mountTime > 2000) {
+        setHasInteracted(true);
+      }
+    };
+    
+    // Слушаем только клики мыши на документе (исключаем keyboard events)
+    document.addEventListener('mousedown', handleUserInteraction, { once: true });
+    
+    return () => {
+      document.removeEventListener('mousedown', handleUserInteraction);
+    };
+  }, [mountTime]);
 
   // Совместимость с принтером
   const isCompatible = label.widthMm <= THERMAL_PRINTER_SETTINGS.maxWidth;
@@ -204,20 +225,22 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ children }) => {
       const child = children as React.ReactElement<any>;
       const prevOnClick = child.props?.onClick;
 
-      const mergedClass = `${child.props?.className || ''} ${!armed ? 'pointer-events-none opacity-60' : ''}`.trim();
+      const isDisabled = !armed || !hasInteracted;
+      const mergedClass = `${child.props?.className || ''} ${isDisabled ? 'pointer-events-none opacity-60' : ''}`.trim();
 
       return React.cloneElement(child, {
         onClick: (e: React.MouseEvent) => {
           e.stopPropagation();
-          if (!armed) {
+          // Проверяем и армирование, и взаимодействие пользователя
+          if (!armed || !hasInteracted) {
             e.preventDefault();
             return;
           }
           setOpen(true);
           prevOnClick?.(e);
         },
-        'aria-disabled': !armed ? true : undefined,
-        disabled: child.props?.disabled || !armed,
+        'aria-disabled': isDisabled ? true : undefined,
+        disabled: child.props?.disabled || isDisabled,
         className: mergedClass
       });
     }
@@ -225,8 +248,8 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ children }) => {
     return (
       <Button
         variant="outline"
-        className={`bg-white ${!armed ? 'pointer-events-none opacity-60' : ''}`}
-        disabled={!armed}
+        className={`bg-white ${!armed || !hasInteracted ? 'pointer-events-none opacity-60' : ''}`}
+        disabled={!armed || !hasInteracted}
         onClick={() => setOpen(true)}
       >
         <Printer className="h-4 w-4 mr-2" />
@@ -244,7 +267,11 @@ const PrintPreview: React.FC<PrintPreviewProps> = ({ children }) => {
       <Dialog
         open={open}
         onOpenChange={(v) => {
-          if (!armed && v) return; // Не открываем пока не "вооружились"
+          // СТРОГАЯ БЛОКИРОВКА: не открываем пока не "вооружились" и пользователь не взаимодействовал
+          if ((!armed || !hasInteracted) && v) {
+            console.log('PrintPreview: Блокировка автоматического открытия', { armed, hasInteracted, v });
+            return;
+          }
           setOpen(v);
         }}
       >
