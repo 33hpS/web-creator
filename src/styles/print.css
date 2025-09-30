@@ -26,7 +26,8 @@
     color: #000000 !important;
     -webkit-print-color-adjust: economy; /* prefer ink saving */
     print-color-adjust: economy;
-    image-rendering: crisp-edges;
+    image-rendering: -webkit-optimize-contrast; /* Edge fallback */
+    image-rendering: crisp-edges; /* Modern browsers */
   }
 
   /* Hide typical chrome in print */

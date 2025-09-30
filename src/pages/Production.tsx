@@ -15,6 +15,7 @@ import { Package, Printer, Play, Filter, Search } from 'lucide-react';
 import { ProductionBatch, ProductionUnit, ProductModel } from '../types/entities';
 import { dataService } from '../services/dataService';
 import { PrintOnly } from '../components/print/Visibility';
+import '../styles/production.css';
 
 const Production: React.FC = () => {
   const { authState, hasPermission } = useAuth();
@@ -295,8 +296,8 @@ const Production: React.FC = () => {
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div 
-                        className="bg-green-600 h-2 rounded-full transition-all" 
-                        style={{ width: `${progress}%` }}
+                        className="bg-green-600 h-2 rounded-full transition-all progress-bar" 
+                        data-progress={progress}
                       ></div>
                     </div>
                   </div>

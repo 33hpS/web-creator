@@ -238,9 +238,9 @@ function QuickEntrances() {
   /** Safe navigate: blur current focus and navigate after current event loop tick. */
   const safeNavigate = (path: string) => {
     (document.activeElement as HTMLElement | null)?.blur?.();
-    // Delay ensures mouseup/click are fully processed before navigation happens,
-    // preventing click-through on the destination page.
-    setTimeout(() => navigate(path), 0);
+    // Увеличиваем задержку для Templates чтобы предотвратить carry-over событий
+    const delay = path === '/templates' ? 200 : 0;
+    setTimeout(() => navigate(path), delay);
   };
 
   /** Keyboard activation on Enter/Space using keyup to prevent carry-over */
@@ -332,8 +332,8 @@ function Article() {
       <section className="section avoid-break mb-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-2">Images</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <img src="https://pub-cdn.sider.ai/u/U07GHKZAW71/web-coder/68d5f831b54d8be52a865be0/resource/a95456fa-0c2a-49bd-843a-54b4d7bad0fe.jpg" className="object-cover rounded border" />
-          <img src="https://pub-cdn.sider.ai/u/U07GHKZAW71/web-coder/68d5f831b54d8be52a865be0/resource/eaaad02b-7c1d-44d0-9628-97e4a9974c12.jpg" className="object-cover rounded border" />
+          <img src="https://pub-cdn.sider.ai/u/U07GHKZAW71/web-coder/68d5f831b54d8be52a865be0/resource/a95456fa-0c2a-49bd-843a-54b4d7bad0fe.jpg" alt="Производственный процесс - изображение 1" className="object-cover rounded border" />
+          <img src="https://pub-cdn.sider.ai/u/U07GHKZAW71/web-coder/68d5f831b54d8be52a865be0/resource/eaaad02b-7c1d-44d0-9628-97e4a9974c12.jpg" alt="Производственный процесс - изображение 2" className="object-cover rounded border" />
         </div>
       </section>
 

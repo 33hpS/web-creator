@@ -102,7 +102,8 @@ html > body * {
   border-radius: 5px;
 }
 
+/* Scrollbar styles with fallbacks for cross-browser compatibility */
 * {
-  scrollbar-width: thin;
-  scrollbar-color: hsl(var(--border)) transparent;
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: hsl(var(--border)) transparent; /* Firefox */
 }
